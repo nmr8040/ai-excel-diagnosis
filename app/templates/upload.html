@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Excelアップロード - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Excelアップロード</h2>
+  <p>Excel/CSVファイルをアップロードして、AIが業務改善ポイントを診断します</p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div id="upload-zone" class="upload-zone">
+      <div class="icon">📁</div>
+      <h3>ファイルをドラッグ＆ドロップ</h3>
+      <p>またはクリックしてファイルを選択</p>
+      <p>.xlsx / .xls / .csv に対応</p>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
+    </div>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>データを読み取り、診断を実行しています...</p>
+      <p style="color:var(--text-muted);font-size:0.85rem;">基本チェック → AI診断 → 改善アクション作成</p>
+    </div>
+
+    <div id="result" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="alert alert-info">
+  <strong>対象データ例：</strong> 問い合わせ管理表、クレーム管理表、誤出荷一覧、請求一覧、見積一覧、残業時間一覧、作業日報、点検記録、在庫一覧、期限管理表 など
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const zone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+const loading = document.getElementById('loading');
+const result = document.getElementById('result');
+
+zone.addEventListener('click', () => fileInput.click());
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) uploadFile(fileInput.files[0]);
+});
+
+async function uploadFile(file) {
+  zone.style.display = 'none';
+  loading.classList.add('active');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'アップロードに失敗しました');
+
+    loading.classList.remove('active');
+    result.style.display = 'block';
+    result.innerHTML = `
+      <div class="alert alert-success">
+        <strong>診断完了！</strong> ${data.file_name}（${data.row_count}件）<br>
+        推定業務種別: ${data.business_type} / 異常検出: ${data.anomaly_count}件
+      </div>
+      <div class="action-bar">
+        <a href="${data.redirect_url}" class="btn btn-primary">診断レポートを見る</a>
+        <a href="/detail/${data.id}" class="btn btn-secondary">詳細画面へ</a>
+      </div>
+    `;
+  } catch (err) {
+    loading.classList.remove('active');
+    zone.style.display = 'block';
+    result.style.display = 'block';
+    result.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+  }
+}
+</script>
+{% endblock %}

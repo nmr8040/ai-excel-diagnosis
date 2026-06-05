@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}ダッシュボード - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>ダッシュボード</h2>
+  <p>Excel診断の全体状況を一目で確認できます</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card primary">
+    <div class="label">総アップロード件数</div>
+    <div class="value">{{ total_uploads }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">今月の診断件数</div>
+    <div class="value">{{ monthly_diagnoses }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="label">検出異常件数</div>
+    <div class="value">{{ total_anomalies }}</div>
+  </div>
+  <div class="stat-card warning">
+    <div class="label">未対応改善アクション</div>
+    <div class="value">{{ pending_actions }}</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="label">優先度「高」のアクション</div>
+    <div class="value">{{ high_priority_actions }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">最近の診断履歴</div>
+    <div class="card-body">
+      {% if recent_uploads %}
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>ファイル名</th>
+            <th>業務種別</th>
+            <th>異常</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in recent_uploads %}
+          <tr>
+            <td>{{ u.uploaded_at.strftime('%Y/%m/%d %H:%M') if u.uploaded_at else '-' }}</td>
+            <td>{{ u.file_name }}</td>
+            <td><span class="badge badge-info">{{ u.detected_business_type or '未推定' }}</span></td>
+            <td>{{ u.check_results|length }}件</td>
+            <td><a href="/detail/{{ u.id }}" class="btn btn-sm btn-secondary">詳細</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <p>まだ診断履歴がありません</p>
+        <a href="/upload" class="btn btn-primary" style="margin-top:1rem;">Excelをアップロード</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">改善アクション一覧</div>
+    <div class="card-body">
+      {% if all_actions %}
+      <table>
+        <thead>
+          <tr>
+            <th>タイトル</th>
+            <th>優先度</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in all_actions %}
+          <tr>
+            <td>{{ a.title }}</td>
+            <td><span class="badge badge-{{ a.priority }}">{{ a.priority }}</span></td>
+            <td>{{ a.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><p>改善アクションはまだありません</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

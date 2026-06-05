@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}エクスポート - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>エクスポート</h2>
+  <p>診断レポートをCSV / Excel / PDF形式でダウンロード</p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if uploads %}
+    <table>
+      <thead>
+        <tr>
+          <th>ファイル名</th>
+          <th>業務種別</th>
+          <th>診断日時</th>
+          <th>エクスポート</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in uploads %}
+        <tr>
+          <td>{{ u.file_name }}</td>
+          <td>{{ u.detected_business_type or '未推定' }}</td>
+          <td>{{ u.uploaded_at.strftime('%Y/%m/%d %H:%M') if u.uploaded_at else '-' }}</td>
+          <td>
+            <a href="/api/export/{{ u.id }}/csv" class="btn btn-sm btn-secondary">CSV</a>
+            <a href="/api/export/{{ u.id }}/excel" class="btn btn-sm btn-secondary">Excel</a>
+            <a href="/api/export/{{ u.id }}/pdf" class="btn btn-sm btn-secondary">PDF</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>エクスポート可能な診断結果がありません</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}詳細 - {{ upload.file_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>診断詳細</h2>
+  <p>{{ upload.file_name }}</p>
+</div>
+
+<div class="action-bar">
+  <a href="/report/{{ upload.id }}" class="btn btn-primary">診断レポート</a>
+  <a href="/api/export/{{ upload.id }}/excel" class="btn btn-secondary">Excel出力</a>
+  <a href="/history" class="btn btn-secondary">履歴に戻る</a>
+</div>
+
+<div class="card">
+  <div class="card-header">ファイル情報</div>
+  <div class="card-body">
+    <table>
+      <tr><th style="width:180px">ファイル名</th><td>{{ upload.file_name }}</td></tr>
+      <tr><th>形式</th><td>{{ upload.file_type }}</td></tr>
+      <tr><th>アップロード日時</th><td>{{ upload.uploaded_at.strftime('%Y/%m/%d %H:%M') if upload.uploaded_at else '-' }}</td></tr>
+      <tr><th>推定業務種別</th><td><span class="badge badge-info">{{ upload.detected_business_type or '未推定' }}</span></td></tr>
+      <tr><th>データ件数</th><td>{{ upload.row_count }}行 × {{ upload.column_count }}列</td></tr>
+      <tr><th>ステータス</th><td>{{ upload.status }}</td></tr>
+      <tr><th>リスクレベル</th><td><span class="badge badge-{{ upload.ai_report.risk_level if upload.ai_report else '中' }}">{{ upload.ai_report.risk_level if upload.ai_report else '-' }}</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">データプレビュー（先頭50行）</div>
+  <div class="card-body preview-table">
+    {% if preview and preview.columns %}
+    <table>
+      <thead>
+        <tr>{% for col in preview.columns %}<th>{{ col }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in preview.rows %}
+        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-muted)">全{{ preview.total_rows }}行 / {{ preview.total_columns }}列</p>
+    {% else %}
+    <p>プレビューを表示できません</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">基本チェック結果（{{ check_results|length }}件）</div>
+  <div class="card-body">
+    {% if check_results %}
+    <table>
+      <thead>
+        <tr><th>種別</th><th>列</th><th>行</th><th>重要度</th><th>メッセージ</th></tr>
+      </thead>
+      <tbody>
+        {% for r in check_results %}
+        <tr>
+          <td>{{ r.check_type }}</td>
+          <td>{{ r.target_column or '-' }}</td>
+          <td>{{ r.target_row or '-' }}</td>
+          <td><span class="severity-{{ r.severity }}">{{ r.severity }}</span></td>
+          <td style="font-size:0.85rem">{{ r.message }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>異常は検出されませんでした</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">AI診断結果</div>
+  <div class="card-body">
+    {% if ai_report %}
+    <p><strong>要約:</strong> {{ ai_report.summary }}</p>
+    <p style="margin-top:0.75rem"><strong>AIコメント:</strong> {{ ai_report.ai_comment }}</p>
+    <p style="margin-top:0.75rem"><strong>重要列:</strong> {{ ai_report.important_columns|join(', ') if ai_report.important_columns else '-' }}</p>
+
+    {% if ai_report.risks %}
+    <h4 style="margin-top:1.5rem;margin-bottom:0.5rem">業務リスク</h4>
+    <ul class="issue-list">
+      {% for risk in ai_report.risks %}
+      <li><span class="badge badge-{{ risk.level }}">{{ risk.level }}</span> <strong>{{ risk.title }}</strong>: {{ risk.description }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% else %}
+    <p>AI診断結果がありません</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    改善アクション一覧（{{ actions|length }}件）
+    <button class="btn btn-sm btn-primary" onclick="document.getElementById('new-action-form').style.display='block'">+ 新規作成</button>
+  </div>
+  <div class="card-body">
+    <div id="new-action-form" style="display:none;margin-bottom:1.5rem;padding:1rem;background:#f8fafc;border-radius:8px;">
+      <h4 style="margin-bottom:1rem">改善アクションを追加</h4>
+      <form id="action-form">
+        <input type="hidden" name="upload_id" value="{{ upload.id }}">
+        <div class="form-group"><label>タイトル</label><input name="title" required></div>
+        <div class="form-group"><label>内容</label><textarea name="description" rows="2"></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label>優先度</label>
+            <select name="priority"><option>高</option><option selected>中</option><option>低</option></select>
+          </div>
+          <div class="form-group"><label>担当者</label><input name="owner"></div>
+        </div>
+        <div class="form-group"><label>期限</label><input name="due_date" type="date"></div>
+        <button type="submit" class="btn btn-primary">作成</button>
+      </form>
+    </div>
+
+    {% if actions %}
+    <table>
+      <thead>
+        <tr><th>タイトル</th><th>内容</th><th>優先度</th><th>担当者</th><th>期限</th><th>ステータス</th></tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+        <tr>
+          <td><strong>{{ a.title }}</strong></td>
+          <td style="font-size:0.85rem">{{ a.description[:60] }}{% if a.description and a.description|length > 60 %}...{% endif %}</td>
+          <td><span class="badge badge-{{ a.priority }}">{{ a.priority }}</span></td>
+          <td>{{ a.owner or '-' }}</td>
+          <td>{{ a.due_date or '-' }}</td>
+          <td>{{ a.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>改善アクションはまだありません</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('action-form')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const res = await fetch('/api/actions', { method: 'POST', body: formData });
+  if (res.ok) location.reload();
+});
+</script>
+{% endblock %}

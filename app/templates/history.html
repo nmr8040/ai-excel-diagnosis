@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}診断履歴 - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>診断履歴</h2>
+  <p>過去にアップロードしたExcelの診断結果一覧</p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if history_items %}
+    <table>
+      <thead>
+        <tr>
+          <th>アップロード日時</th>
+          <th>ファイル名</th>
+          <th>推定業務種別</th>
+          <th>データ件数</th>
+          <th>異常件数</th>
+          <th>改善提案件数</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in history_items %}
+        <tr>
+          <td>{{ item.upload.uploaded_at.strftime('%Y/%m/%d %H:%M') if item.upload.uploaded_at else '-' }}</td>
+          <td>{{ item.upload.file_name }}</td>
+          <td><span class="badge badge-info">{{ item.upload.detected_business_type or '未推定' }}</span></td>
+          <td>{{ item.upload.row_count }}件</td>
+          <td><span class="severity-{% if item.anomaly_count > 5 %}high{% elif item.anomaly_count > 0 %}medium{% else %}low{% endif %}">{{ item.anomaly_count }}件</span></td>
+          <td>{{ item.action_count }}件</td>
+          <td>
+            <a href="/detail/{{ item.upload.id }}" class="btn btn-sm btn-primary">詳細</a>
+            <a href="/report/{{ item.upload.id }}" class="btn btn-sm btn-secondary">レポート</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>診断履歴はまだありません</p>
+      <a href="/upload" class="btn btn-primary" style="margin-top:1rem;">最初のExcelをアップロード</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

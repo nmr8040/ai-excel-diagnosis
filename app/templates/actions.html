@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}改善アクション - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>改善アクション</h2>
+  <p>診断結果から作成された改善タスクの管理</p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if actions %}
+    <table>
+      <thead>
+        <tr>
+          <th>タイトル</th>
+          <th>内容</th>
+          <th>優先度</th>
+          <th>担当者</th>
+          <th>期限</th>
+          <th>ステータス</th>
+          <th>元ファイル</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+        <tr>
+          <td><strong>{{ a.title }}</strong></td>
+          <td style="max-width:250px;font-size:0.85rem;color:var(--text-muted)">{{ a.description[:80] }}{% if a.description|length > 80 %}...{% endif %}</td>
+          <td><span class="badge badge-{{ a.priority }}">{{ a.priority }}</span></td>
+          <td>{{ a.owner or '-' }}</td>
+          <td>{{ a.due_date or '-' }}</td>
+          <td>
+            <select class="status-select" data-id="{{ a.id }}" style="padding:0.3rem;border-radius:6px;border:1px solid var(--border);font-size:0.8rem;">
+              <option value="未着手" {% if a.status == '未着手' %}selected{% endif %}>未着手</option>
+              <option value="進行中" {% if a.status == '進行中' %}selected{% endif %}>進行中</option>
+              <option value="完了" {% if a.status == '完了' %}selected{% endif %}>完了</option>
+            </select>
+          </td>
+          <td><a href="/detail/{{ a.upload_id }}">{{ a.upload.file_name if a.upload else '-' }}</a></td>
+          <td></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>改善アクションはまだありません。Excelをアップロードして診断を実行してください。</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.status-select').forEach(sel => {
+  sel.addEventListener('change', async () => {
+    const formData = new FormData();
+    formData.append('status', sel.value);
+    await fetch(`/api/actions/${sel.dataset.id}`, { method: 'PUT', body: formData });
+  });
+});
+</script>
+{% endblock %}

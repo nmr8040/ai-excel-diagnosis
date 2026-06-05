@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}エラー - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="alert alert-error">
+      <strong>エラー</strong><br>{{ message }}
+    </div>
+    <a href="/" class="btn btn-primary">ダッシュボードに戻る</a>
+  </div>
+</div>
+{% endblock %}

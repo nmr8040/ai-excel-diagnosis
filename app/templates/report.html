@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}診断レポート - {{ upload.file_name }}{% endblock %}
+{% block content %}
+<div class="report-hero">
+  <h2>診断レポート</h2>
+  <p>{{ upload.file_name }}</p>
+  <div class="meta">
+    <span>業務種別: <strong>{{ ai_report.business_type or upload.detected_business_type or '未推定' }}</strong></span>
+    <span>データ件数: <strong>{{ upload.row_count }}件</strong></span>
+    <span>異常検出: <strong>{{ anomaly_count }}件</strong></span>
+    <span>リスクレベル: <strong>{{ ai_report.risk_level or '中' }}</strong></span>
+  </div>
+</div>
+
+<div class="action-bar">
+  <a href="/detail/{{ upload.id }}" class="btn btn-secondary">詳細画面</a>
+  <a href="/api/export/{{ upload.id }}/csv" class="btn btn-secondary">CSV出力</a>
+  <a href="/api/export/{{ upload.id }}/excel" class="btn btn-secondary">Excel出力</a>
+  <a href="/api/export/{{ upload.id }}/pdf" class="btn btn-secondary">PDF出力</a>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">重要な指摘 TOP5</div>
+    <div class="card-body">
+      <ul class="issue-list">
+        {% for issue in ai_report.top_issues[:5] %}
+        <li>
+          <span class="badge badge-{{ issue.priority }}">{{ issue.priority }}</span>
+          <div>
+            <strong>{{ issue.title }}</strong>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem">{{ issue.description }}</p>
+          </div>
+        </li>
+        {% else %}
+        <li>指摘事項はありません</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">改善ポイント TOP5</div>
+    <div class="card-body">
+      <ul class="issue-list">
+        {% for imp in ai_report.top_improvements[:5] %}
+        <li>
+          <span class="badge badge-{{ imp.priority }}">{{ imp.priority }}</span>
+          <div>
+            <strong>{{ imp.title }}</strong>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem">{{ imp.description }}</p>
+          </div>
+        </li>
+        {% else %}
+        <li>改善ポイントはありません</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">優先度別まとめ</div>
+  <div class="card-body">
+    <div class="grid-2">
+      {% for level in ['高', '中', '低'] %}
+      <div class="priority-section">
+        <h4><span class="badge badge-{{ level }}">優先度 {{ level }}</span></h4>
+        <ul class="issue-list">
+          {% set items = ai_report.priorities[level] if ai_report.priorities and level in ai_report.priorities else [] %}
+          {% for item in items[:5] %}
+          <li>{{ item.title or item.description }}</li>
+          {% else %}
+          <li style="color:var(--text-muted)">該当なし</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">AIコメント</div>
+  <div class="card-body">
+    <p>{{ ai_report.ai_comment or ai_report.summary or 'コメントなし' }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">次に取るべきアクション</div>
+  <div class="card-body">
+    <ul class="issue-list">
+      {% for action in ai_report.next_actions %}
+      <li>→ {{ action }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">自動生成された改善アクション（{{ actions|length }}件）</div>
+  <div class="card-body">
+    <table>
+      <thead>
+        <tr><th>タイトル</th><th>優先度</th><th>期限</th><th>ステータス</th></tr>
+      </thead>
+      <tbody>
+        {% for a in actions %}
+        <tr>
+          <td>{{ a.title }}</td>
+          <td><span class="badge badge-{{ a.priority }}">{{ a.priority }}</span></td>
+          <td>{{ a.due_date or '-' }}</td>
+          <td>{{ a.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

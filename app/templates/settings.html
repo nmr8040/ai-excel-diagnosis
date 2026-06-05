@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}設定 - AI Excel 診断{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>設定</h2>
+  <p>AI診断の設定と環境情報</p>
+</div>
+
+<div class="card">
+  <div class="card-header">AI診断設定</div>
+  <div class="card-body">
+    <table>
+      <tr><th style="width:200px">AIプロバイダ</th><td><span class="badge badge-info">{{ ai_provider }}</span></td></tr>
+      <tr><th>OpenAIモデル</th><td>{{ openai_model }}</td></tr>
+    </table>
+
+    <div class="alert alert-info" style="margin-top:1.5rem;">
+      <strong>AI APIの切り替え方法</strong><br>
+      環境変数 <code>AI_PROVIDER</code> を <code>openai</code> に設定し、<code>OPENAI_API_KEY</code> を指定するとOpenAI APIを使用します。<br>
+      未設定の場合はダミー診断（ルールベース）が動作します。
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">システム情報</div>
+  <div class="card-body">
+    <table>
+      <tr><th style="width:200px">バージョン</th><td>1.0.0</td></tr>
+      <tr><th>対応形式</th><td>.xlsx / .xls / .csv</td></tr>
+      <tr><th>基本チェック</th><td>空白セル、重複行、異常値、日付欠損、マイナス値、極端値、期間変動、偏り</td></tr>
+    </table>
+  </div>
+</div>
+{% endblock %}

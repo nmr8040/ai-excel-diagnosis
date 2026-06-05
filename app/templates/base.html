@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Excel 診断{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <h1>AI Excel 診断</h1>
+        <p>業務改善ポイント発見システム</p>
+      </div>
+      <nav>
+        <a href="/" class="{% if active == 'dashboard' %}active{% endif %}">
+          <span class="icon">📊</span> ダッシュボード
+        </a>
+        <a href="/upload" class="{% if active == 'upload' %}active{% endif %}">
+          <span class="icon">📤</span> Excelアップロード
+        </a>
+        <a href="/history" class="{% if active == 'history' %}active{% endif %}">
+          <span class="icon">📋</span> 診断履歴
+        </a>
+        <a href="/actions" class="{% if active == 'actions' %}active{% endif %}">
+          <span class="icon">✅</span> 改善アクション
+        </a>
+        <a href="/export" class="{% if active == 'export' %}active{% endif %}">
+          <span class="icon">📥</span> エクスポート
+        </a>
+        <a href="/settings" class="{% if active == 'settings' %}active{% endif %}">
+          <span class="icon">⚙️</span> 設定
+        </a>
+      </nav>
+    </aside>
+    <main class="main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

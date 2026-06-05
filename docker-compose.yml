@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/uploads:/app/data/uploads
+      - ./data/db:/app/data/db
+    environment:
+      - DATABASE_URL=sqlite:////app/data/db/excel_diagnosis.db
+      - UPLOAD_DIR=/app/data/uploads
+      - AI_PROVIDER=dummy
+      - OPENAI_API_KEY=
+    restart: unless-stopped
