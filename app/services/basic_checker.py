@@ -18,22 +18,59 @@ def analyze_excel_basic(df: pd.DataFrame) -> list[dict]:
     return results
 
 
+OPTIONAL_COLUMN_KEYWORDS = (
+    "備考", "メモ", "コメント", "注記", "remarks", "remark", "note", "memo", "comment",
+)
+REQUIRED_COLUMN_KEYWORDS = (
+    "担当", "日付", "date", "金額", "数量", "ステータス", "状態", "期限", "納期",
+    "顧客", "案件", "名称", "名前", "件名", "カテゴリ", "分類", "種別",
+)
+
+
+def _is_optional_column(col_name: str) -> bool:
+    col_lower = str(col_name).lower()
+    return any(kw in str(col_name) or kw in col_lower for kw in OPTIONAL_COLUMN_KEYWORDS)
+
+
+def _is_important_column(col_name: str) -> bool:
+    col_lower = str(col_name).lower()
+    return any(kw in str(col_name) or kw in col_lower for kw in REQUIRED_COLUMN_KEYWORDS)
+
+
 def _check_blank_cells(df: pd.DataFrame) -> list[dict]:
     results = []
     for col in df.columns:
+        col_str = str(col)
+        if _is_optional_column(col_str):
+            continue
+
         null_mask = df[col].isna() | (df[col].astype(str).str.strip() == "")
         null_count = int(null_mask.sum())
-        if null_count > 0:
-            ratio = null_count / len(df) * 100
-            severity = "high" if ratio > 30 else "medium" if ratio > 10 else "low"
-            first_rows = [int(i) + 2 for i in df.index[null_mask].tolist()[:5]]
-            results.append({
-                "check_type": "空白セル",
-                "target_column": str(col),
-                "target_row": first_rows[0] if first_rows else None,
-                "message": f"列「{col}」に空白が{null_count}件（{ratio:.1f}%）あります。行: {first_rows}",
-                "severity": severity,
-            })
+        if null_count == 0:
+            continue
+
+        ratio = null_count / len(df) * 100
+        is_important = _is_important_column(col_str)
+
+        # 重要列は10%超で指摘、それ以外は50%超のみ
+        if is_important:
+            if ratio <= 10:
+                continue
+            severity = "high" if ratio > 30 else "medium"
+        else:
+            if ratio <= 50:
+                continue
+            severity = "medium" if ratio <= 80 else "high"
+
+        first_rows = [int(i) + 2 for i in df.index[null_mask].tolist()[:5]]
+        hint = "入力漏れの可能性があります" if is_important else "多くの行が未入力です"
+        results.append({
+            "check_type": "空白セル",
+            "target_column": col_str,
+            "target_row": first_rows[0] if first_rows else None,
+            "message": f"列「{col}」に空白が{null_count}件（{ratio:.1f}%）あります。{hint}。行: {first_rows}",
+            "severity": severity,
+        })
     return results
 
 
