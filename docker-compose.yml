@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./data/uploads:/app/data/uploads
       - ./data/db:/app/data/db

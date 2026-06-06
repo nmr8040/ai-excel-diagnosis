@@ -17,6 +17,6 @@ ENV PYTHONUNBUFFERED=1
 ENV DATABASE_URL=sqlite:////app/data/db/excel_diagnosis.db
 ENV UPLOAD_DIR=/app/data/uploads
 
-EXPOSE 8000
+EXPOSE 8001
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

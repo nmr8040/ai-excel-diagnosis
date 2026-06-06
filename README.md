@@ -38,7 +38,7 @@ docker compose logs -f
 docker compose down
 ```
 
-ブラウザで http://localhost:8000 を開いてください。
+ブラウザで http://localhost:8001 を開いてください。
 
 ### ローカル起動
 
@@ -51,8 +51,21 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 起動
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
+
+### Render（クラウドデプロイ）
+
+GitHub リポジトリと `render.yaml` から Blueprint デプロイできます。
+
+1. [Render Dashboard](https://dashboard.render.com/) にログイン
+2. **New +** → **Blueprint** を選択
+3. リポジトリ `nmr8040/ai-excel-diagnosis` を接続
+4. **Apply** でデプロイ開始
+
+デプロイ完了後、`https://ai-excel-diagnosis.onrender.com` のような URL でアクセスできます。
+
+> **注意:** 無料プランではディスクが一時的なため、再起動後にアップロード履歴・DBデータは消えます。本番運用時は PostgreSQL 等への移行を推奨します。
 
 ## 使い方
 
