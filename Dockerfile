@@ -11,12 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/data/uploads /app/data/db
-
 ENV PYTHONUNBUFFERED=1
-ENV DATABASE_URL=sqlite:////app/data/db/excel_diagnosis.db
-ENV UPLOAD_DIR=/app/data/uploads
+ENV DATABASE_URL=sqlite:////tmp/excel_diagnosis.db
+ENV UPLOAD_DIR=/tmp/uploads
+ENV PORT=10000
 
-EXPOSE 8001
+EXPOSE 10000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
